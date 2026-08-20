@@ -1,4 +1,4 @@
-package src
+package `lab-001`
 
 fun main() {
     val products = arrayListOf(

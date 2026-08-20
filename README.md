@@ -4,12 +4,13 @@ Coursework repository for the **Mobile Platforms** class — homework tasks and 
 
 ## Structure
 
-Each assignment lives in its own directory:
+Each assignment lives in its own top-level, independent directory:
 
 ```
 lab-001/
-  src/
-    Main.kt
+  Main.kt
+lab-002/
+  Main.kt
 ```
 
 ## Stack
