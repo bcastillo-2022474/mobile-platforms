@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(onStart: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +35,7 @@ fun LoginScreen() {
             ) {
                 Text("Rick y Morty")
                 Button(
-                    onClick = {},
+                    onClick = onStart,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Entrar")
@@ -49,5 +49,5 @@ fun LoginScreen() {
 @Preview
 @Composable
 fun ScreenPreview() {
-    LoginScreen()
+    LoginScreen(onStart = {})
 }
