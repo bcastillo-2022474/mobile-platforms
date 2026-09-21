@@ -99,6 +99,8 @@ fun CharacterComponent(character: Character, onClick: () -> Unit) {
                 Text(character.species)
                 Text("-")
                 Text(character.status)
+                Text("-")
+                Text(character.gender)
             }
         }
     }

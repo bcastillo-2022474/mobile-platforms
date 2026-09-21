@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "plat.lab1.lab5"
+    namespace = "plat.lab7"
 
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "plat.lab1.lab5"
+        applicationId = "plat.lab7"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
