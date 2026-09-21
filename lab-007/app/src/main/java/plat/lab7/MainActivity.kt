@@ -12,7 +12,6 @@ import androidx.navigation.toRoute
 import plat.lab7.navigation.CharacterDetail
 import plat.lab7.navigation.Characters
 import plat.lab7.navigation.Login
-import plat.lab7.repository.CharacterRepository
 import plat.lab7.screens.CharacterDetailScreen
 import plat.lab7.screens.CharactersScreen
 import plat.lab7.screens.LoginScreen
@@ -20,21 +19,19 @@ import plat.lab7.ui.theme.Lab7Theme
 
 class MainActivity : ComponentActivity() {
 
-    private val repository = CharacterRepository()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             Lab7Theme {
-                AppNavHost(repository)
+                AppNavHost()
             }
         }
     }
 }
 
 @Composable
-fun AppNavHost(repository: CharacterRepository) {
+fun AppNavHost() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Login) {
@@ -75,7 +72,7 @@ fun ScreenLightPreview() {
         darkTheme = false,
         dynamicColor = false
     ) {
-        AppNavHost(CharacterRepository())
+        AppNavHost()
     }
 }
 
@@ -90,6 +87,6 @@ fun ScreenDarkPreview() {
         darkTheme = true,
         dynamicColor = false
     ) {
-        AppNavHost(CharacterRepository())
+        AppNavHost()
     }
 }
