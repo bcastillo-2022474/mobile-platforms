@@ -1,27 +1,15 @@
-# IntelliJ IDEA
-.idea/
 *.iml
-*.iws
-*.ipr
-
-# Compiled output
-out/
-build/
-target/
-*.class
-*.jar
-
-# Gradle
-.gradle/
-gradle-app.setting
-
-# Maven
-.mvn/
-!.mvn/wrapper/maven-wrapper.jar
-
-# Logs
-*.log
-
-# OS files
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
 .DS_Store
-Thumbs.db
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
