@@ -15,23 +15,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import plat.lab7.dto.Location
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import plat.lab7.repository.LocationDb
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationDetailScreen(id: Int, onBack: () -> Unit) {
-    val location = remember(id) {
-        LocationDb().getLocationById(id)
-    }
-
+fun LocationDetailScreen(location: Location, onBack: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -78,5 +73,5 @@ fun LocationDetailScreen(id: Int, onBack: () -> Unit) {
 @Preview
 @Composable
 fun LocationDetailScreenPreview() {
-    LocationDetailScreen(id = 1, onBack = {})
+    LocationDetailScreen(location = Location(1, "Earth (C-137)", "Planet", "Dimension C-137"), onBack = {})
 }
