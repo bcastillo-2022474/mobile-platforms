@@ -25,12 +25,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-private const val FULL_NAME = "Brandon João Castillo"
 private const val STUDENT_ID = "2022474"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onLogout: () -> Unit) {
+fun ProfileScreen(userName: String, onLogout: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -68,7 +67,7 @@ fun ProfileScreen(onLogout: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Field(fieldName = "Nombre:", value = FULL_NAME)
+                    Field(fieldName = "Nombre:", value = userName)
                     Field(fieldName = "Carné:", value = STUDENT_ID)
                 }
                 OutlinedButton(onClick = onLogout) {
@@ -82,5 +81,5 @@ fun ProfileScreen(onLogout: () -> Unit) {
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen(onLogout = {})
+    ProfileScreen(userName = "Rick Sanchez", onLogout = {})
 }

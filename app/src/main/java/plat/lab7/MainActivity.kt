@@ -37,13 +37,19 @@ import plat.lab7.navigation.Locations
 import plat.lab7.navigation.LocationsGraph
 import plat.lab7.navigation.Login
 import plat.lab7.navigation.Profile
+import plat.lab7.navigation.Splash
 import plat.lab7.ui.components.CharacterDetailStateScreen
 import plat.lab7.ui.components.CharactersStateScreen
 import plat.lab7.ui.components.LocationDetailStateScreen
 import plat.lab7.ui.components.LocationsStateScreen
 import plat.lab7.screens.LoginScreen
 import plat.lab7.screens.ProfileScreen
+import plat.lab7.screens.SplashScreen
 import plat.lab7.ui.theme.Lab7Theme
+import plat.lab7.ui.viewmodel.SessionViewModel
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -70,7 +76,9 @@ private val bottomTabs = listOf(
 fun AppNavHost() {
     val navController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
-    val showBottomBar = currentDestination != null && !currentDestination.hasRoute<Login>()
+    val showBottomBar = currentDestination != null &&
+        !currentDestination.hasRoute<Splash>() &&
+        !currentDestination.hasRoute<Login>()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -109,14 +117,28 @@ fun AppNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Login,
+            startDestination = Splash,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable<Splash> {
+                SplashScreen(
+                    sessionViewModel = viewModel(),
+                    onReady = { isLoggedIn ->
+                        val next: Any = if (isLoggedIn) CharactersGraph else Login
+                        navController.navigate(next) {
+                            popUpTo(Splash) { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable<Login> {
+                val sessionViewModel: SessionViewModel = viewModel()
                 LoginScreen(
-                    onStart = {
-                        navController.navigate(CharactersGraph) {
-                            popUpTo(Login) { inclusive = true }
+                    onStart = { name ->
+                        sessionViewModel.login(name) {
+                            navController.navigate(CharactersGraph) {
+                                popUpTo(Login) { inclusive = true }
+                            }
                         }
                     }
                 )
@@ -150,10 +172,15 @@ fun AppNavHost() {
                 }
             }
             composable<Profile> {
+                val sessionViewModel: SessionViewModel = viewModel()
+                val userName by sessionViewModel.userName.collectAsStateWithLifecycle()
                 ProfileScreen(
+                    userName = userName.orEmpty(),
                     onLogout = {
-                        navController.navigate(Login) {
-                            popUpTo(navController.graph.id) { inclusive = true }
+                        sessionViewModel.logout {
+                            navController.navigate(Login) {
+                                popUpTo(navController.graph.id) { inclusive = true }
+                            }
                         }
                     }
                 )
