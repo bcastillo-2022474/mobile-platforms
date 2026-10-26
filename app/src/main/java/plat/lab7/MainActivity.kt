@@ -47,6 +47,8 @@ import plat.lab7.screens.ProfileScreen
 import plat.lab7.screens.SplashScreen
 import plat.lab7.ui.theme.Lab7Theme
 import plat.lab7.ui.viewmodel.SessionViewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -122,7 +124,7 @@ fun AppNavHost() {
         ) {
             composable<Splash> {
                 SplashScreen(
-                    sessionViewModel = viewModel(),
+                    sessionViewModel = rememberSessionViewModel(),
                     onReady = { isLoggedIn ->
                         val next: Any = if (isLoggedIn) CharactersGraph else Login
                         navController.navigate(next) {
@@ -132,8 +134,12 @@ fun AppNavHost() {
                 )
             }
             composable<Login> {
-                val sessionViewModel: SessionViewModel = viewModel()
+                val sessionViewModel = rememberSessionViewModel()
+                val isSyncing by sessionViewModel.isSyncing.collectAsStateWithLifecycle()
+                val syncFailed by sessionViewModel.syncFailed.collectAsStateWithLifecycle()
                 LoginScreen(
+                    isSyncing = isSyncing,
+                    syncFailed = syncFailed,
                     onStart = { name ->
                         sessionViewModel.login(name) {
                             navController.navigate(CharactersGraph) {
@@ -172,7 +178,7 @@ fun AppNavHost() {
                 }
             }
             composable<Profile> {
-                val sessionViewModel: SessionViewModel = viewModel()
+                val sessionViewModel = rememberSessionViewModel()
                 val userName by sessionViewModel.userName.collectAsStateWithLifecycle()
                 ProfileScreen(
                     userName = userName.orEmpty(),
@@ -187,6 +193,16 @@ fun AppNavHost() {
             }
         }
     }
+}
+
+@Composable
+private fun rememberSessionViewModel(): SessionViewModel {
+    val container = appContainer()
+    return viewModel(
+        factory = viewModelFactory {
+            initializer { SessionViewModel(container.preferences, container.library) }
+        }
+    )
 }
 
 private fun NavDestination?.isInGraph(graph: Any): Boolean =

@@ -18,7 +18,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -32,7 +41,13 @@ import plat.lab7.dto.Character
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharactersScreen(characters: List<Character>, onCharacterClick: (Int) -> Unit) {
+fun CharactersScreen(
+    characters: List<Character>,
+    showOnlyFavorites: Boolean,
+    onToggleFavoritesFilter: () -> Unit,
+    onToggleFavorite: (Character) -> Unit,
+    onCharacterClick: (Int) -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -42,22 +57,41 @@ fun CharactersScreen(characters: List<Character>, onCharacterClick: (Int) -> Uni
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 title = {
                     Text("Characters")
+                },
+                actions = {
+                    IconButton(onClick = onToggleFavoritesFilter) {
+                        Icon(
+                            imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = if (showOnlyFavorites) "Mostrar todos los personajes" else "Mostrar solo favoritos"
+                        )
+                    }
                 }
             )
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                items(characters, key = { it.id }) { character ->
-                    CharacterComponent(
-                        character = character,
-                        onClick = { onCharacterClick(character.id) }
-                    )
+            if (characters.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No hay elementos para mostrar")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    items(characters, key = { it.id }) { character ->
+                        CharacterComponent(
+                            character = character,
+                            onClick = { onCharacterClick(character.id) },
+                            onToggleFavorite = { onToggleFavorite(character) }
+                        )
+                    }
                 }
             }
         }
@@ -65,7 +99,11 @@ fun CharactersScreen(characters: List<Character>, onCharacterClick: (Int) -> Uni
 }
 
 @Composable
-fun CharacterComponent(character: Character, onClick: () -> Unit) {
+fun CharacterComponent(
+    character: Character,
+    onClick: () -> Unit,
+    onToggleFavorite: () -> Unit
+) {
     Row(
         modifier = Modifier
             .padding(horizontal = 30.dp)
@@ -82,6 +120,7 @@ fun CharacterComponent(character: Character, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(50))
         )
         Column(
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(character.name, fontSize = 4.em, fontWeight = FontWeight.Bold)
@@ -95,11 +134,24 @@ fun CharacterComponent(character: Character, onClick: () -> Unit) {
                 Text(character.gender)
             }
         }
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                imageVector = if (character.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = "Marcar como favorito",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 
 @Preview
 @Composable
 fun CharactersScreenPreview() {
-    CharactersScreen(characters = emptyList(), onCharacterClick = {})
+    CharactersScreen(
+        characters = emptyList(),
+        showOnlyFavorites = false,
+        onToggleFavoritesFilter = {},
+        onToggleFavorite = {},
+        onCharacterClick = {}
+    )
 }

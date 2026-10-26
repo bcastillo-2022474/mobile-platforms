@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import plat.lab7.R
 
 @Composable
-fun LoginScreen(onStart: (name: String) -> Unit) {
+fun LoginScreen(isSyncing: Boolean, syncFailed: Boolean, onStart: (name: String) -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
 
     Surface(
@@ -57,16 +62,34 @@ fun LoginScreen(onStart: (name: String) -> Unit) {
                     onValueChange = { name = it },
                     label = { Text("Nombre") },
                     singleLine = true,
+                    enabled = !isSyncing,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
                 Button(
                     onClick = { onStart(name) },
-                    enabled = name.isNotBlank(),
+                    enabled = name.isNotBlank() && !isSyncing,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Iniciar sesión")
+                    if (isSyncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Sincronizando...")
+                    } else {
+                        Text("Iniciar sesión")
+                    }
+                }
+                if (syncFailed) {
+                    Text(
+                        text = "No se pudo cargar la información. Intenta de nuevo.",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
                 }
             }
             Text("Joao Castillo carnet 25776")
@@ -77,5 +100,5 @@ fun LoginScreen(onStart: (name: String) -> Unit) {
 @Preview
 @Composable
 fun ScreenPreview() {
-    LoginScreen(onStart = {})
+    LoginScreen(isSyncing = false, syncFailed = false, onStart = {})
 }

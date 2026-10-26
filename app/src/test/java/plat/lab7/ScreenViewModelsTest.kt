@@ -18,13 +18,14 @@ import plat.lab7.ui.viewmodel.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScreenViewModelsTest {
     private val dispatcher = StandardTestDispatcher()
+    private val repository = FakeLibraryRepository()
 
     @Before fun setUp() { Dispatchers.setMain(dispatcher) }
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test fun listsLoadAfterFourSeconds() = runTest(dispatcher) {
-        val characters = CharactersViewModel()
-        val locations = LocationsViewModel()
+        val characters = CharactersViewModel(repository)
+        val locations = LocationsViewModel(repository)
         advanceTimeBy(3999)
         assertTrue(characters.uiState.value.isLoading)
         assertTrue(locations.uiState.value.isLoading)
@@ -37,8 +38,8 @@ class ScreenViewModelsTest {
     }
 
     @Test fun detailsUseSavedIdsAndLoadAfterTwoSeconds() = runTest(dispatcher) {
-        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to 2)))
-        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to 3)))
+        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to 2)), repository)
+        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to 3)), repository)
         advanceTimeBy(1999)
         assertTrue(character.uiState.value.isLoading)
         assertTrue(location.uiState.value.isLoading)
@@ -49,10 +50,10 @@ class ScreenViewModelsTest {
     }
 
     @Test fun errorsCancelPendingLoadsAndRetryWaitsAgain() = runTest(dispatcher) {
-        val characters = CharactersViewModel()
-        val locations = LocationsViewModel()
-        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to 2)))
-        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to 3)))
+        val characters = CharactersViewModel(repository)
+        val locations = LocationsViewModel(repository)
+        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to 2)), repository)
+        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to 3)), repository)
         runCurrent()
         advanceTimeBy(1000)
         characters.showError()
@@ -89,13 +90,29 @@ class ScreenViewModelsTest {
     }
 
     @Test fun invalidDetailIdsShowError() = runTest(dispatcher) {
-        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to -1)))
-        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to -1)))
+        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to -1)), repository)
+        val location = LocationDetailViewModel(SavedStateHandle(mapOf("id" to -1)), repository)
         advanceTimeBy(2000)
         runCurrent()
         assertTrue(character.uiState.value.hasError)
         assertTrue(location.uiState.value.hasError)
         assertFalse(character.uiState.value.isLoading)
         assertFalse(location.uiState.value.isLoading)
+    }
+
+    @Test fun favoritesFilterShowsOnlyFavoritesAndToggleUpdatesDetail() = runTest(dispatcher) {
+        val characters = CharactersViewModel(repository)
+        val character = CharacterDetailViewModel(SavedStateHandle(mapOf("id" to 2)), repository)
+        advanceTimeBy(4000)
+        runCurrent()
+        assertEquals(20, characters.uiState.value.data!!.size)
+
+        character.toggleFavorite()
+        runCurrent()
+        assertTrue(character.uiState.value.data!!.isFavorite)
+
+        characters.toggleFavoritesFilter()
+        runCurrent()
+        assertEquals(listOf(2), characters.uiState.value.data!!.map { it.id })
     }
 }

@@ -7,16 +7,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import plat.lab7.data.LibraryRepository
 import plat.lab7.dto.Location
-import plat.lab7.repository.LocationDb
 import plat.lab7.ui.state.ScreenState
 
 class LocationDetailViewModel(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val repository: LibraryRepository
 ) : ViewModel() {
-
-    private val db = LocationDb()
 
     private val id =
         checkNotNull(savedStateHandle.get<Int>("id"))
@@ -40,17 +40,17 @@ class LocationDetailViewModel(
         loadingJob = viewModelScope.launch {
             delay(2000)
 
-            try {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    data = db.getLocationById(id)
-                )
-            } catch (e: Exception) {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    hasError = true
-                )
-            }
+            repository.observeLocation(id)
+                .catch {
+                    _uiState.value = ScreenState(isLoading = false, hasError = true)
+                }
+                .collect { location ->
+                    _uiState.value = if (location != null) {
+                        ScreenState(isLoading = false, data = location)
+                    } else {
+                        ScreenState(isLoading = false, hasError = true)
+                    }
+                }
         }
     }
 

@@ -6,14 +6,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import plat.lab7.data.LibraryRepository
 import plat.lab7.dto.Location
-import plat.lab7.repository.LocationDb
 import plat.lab7.ui.state.ScreenState
 
-class LocationsViewModel : ViewModel() {
-
-    private val db = LocationDb()
+class LocationsViewModel(
+    private val repository: LibraryRepository
+) : ViewModel() {
 
     private val _uiState =
         MutableStateFlow(ScreenState<List<Location>>())
@@ -34,17 +35,13 @@ class LocationsViewModel : ViewModel() {
         loadingJob = viewModelScope.launch {
             delay(4000)
 
-            try {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    data = db.getAllLocations()
-                )
-            } catch (e: Exception) {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    hasError = true
-                )
-            }
+            repository.observeLocations()
+                .catch {
+                    _uiState.value = ScreenState(isLoading = false, hasError = true)
+                }
+                .collect { locations ->
+                    _uiState.value = ScreenState(isLoading = false, data = locations)
+                }
         }
     }
 

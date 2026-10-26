@@ -3,6 +3,10 @@ package plat.lab7.ui.components
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import plat.lab7.appContainer
 import plat.lab7.screens.CharactersScreen
 import plat.lab7.screens.CharacterDetailScreen
 import plat.lab7.screens.LocationsScreen
@@ -14,10 +18,14 @@ import plat.lab7.ui.viewmodel.LocationDetailViewModel
 
 @Composable
 fun CharactersStateScreen(
-    onCharacterClick: (Int) -> Unit,
-    viewModel: CharactersViewModel = viewModel()
+    onCharacterClick: (Int) -> Unit
 ) {
+    val library = appContainer().library
+    val viewModel: CharactersViewModel = viewModel(
+        factory = viewModelFactory { initializer { CharactersViewModel(library) } }
+    )
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    val showOnlyFavorites = viewModel.showOnlyFavorites.collectAsStateWithLifecycle().value
 
     when {
         state.hasError -> {
@@ -35,6 +43,9 @@ fun CharactersStateScreen(
         state.data != null -> {
             CharactersScreen(
                 characters = state.data,
+                showOnlyFavorites = showOnlyFavorites,
+                onToggleFavoritesFilter = viewModel::toggleFavoritesFilter,
+                onToggleFavorite = viewModel::toggleFavorite,
                 onCharacterClick = onCharacterClick
             )
         }
@@ -43,9 +54,14 @@ fun CharactersStateScreen(
 
 @Composable
 fun CharacterDetailStateScreen(
-    onBack: () -> Unit,
-    viewModel: CharacterDetailViewModel = viewModel()
+    onBack: () -> Unit
 ) {
+    val library = appContainer().library
+    val viewModel: CharacterDetailViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { CharacterDetailViewModel(createSavedStateHandle(), library) }
+        }
+    )
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
 
     when {
@@ -64,7 +80,8 @@ fun CharacterDetailStateScreen(
         state.data != null -> {
             CharacterDetailScreen(
                 character = state.data,
-                onBack = onBack
+                onBack = onBack,
+                onToggleFavorite = viewModel::toggleFavorite
             )
         }
     }
@@ -72,9 +89,12 @@ fun CharacterDetailStateScreen(
 
 @Composable
 fun LocationsStateScreen(
-    onLocationClick: (Int) -> Unit,
-    viewModel: LocationsViewModel = viewModel()
+    onLocationClick: (Int) -> Unit
 ) {
+    val library = appContainer().library
+    val viewModel: LocationsViewModel = viewModel(
+        factory = viewModelFactory { initializer { LocationsViewModel(library) } }
+    )
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
 
     when {
@@ -101,9 +121,14 @@ fun LocationsStateScreen(
 
 @Composable
 fun LocationDetailStateScreen(
-    onBack: () -> Unit,
-    viewModel: LocationDetailViewModel = viewModel()
+    onBack: () -> Unit
 ) {
+    val library = appContainer().library
+    val viewModel: LocationDetailViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { LocationDetailViewModel(createSavedStateHandle(), library) }
+        }
+    )
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
 
     when {

@@ -7,16 +7,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import plat.lab7.data.LibraryRepository
 import plat.lab7.dto.Character
-import plat.lab7.repository.CharacterRepository
 import plat.lab7.ui.state.ScreenState
 
 class CharacterDetailViewModel(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val repository: LibraryRepository
 ) : ViewModel() {
-
-    private val db = CharacterRepository()
 
     private val id =
         checkNotNull(savedStateHandle.get<Int>("id"))
@@ -40,17 +40,24 @@ class CharacterDetailViewModel(
         loadingJob = viewModelScope.launch {
             delay(2000)
 
-            try {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    data = db.getCharacterById(id)
-                )
-            } catch (e: Exception) {
-                _uiState.value = ScreenState(
-                    isLoading = false,
-                    hasError = true
-                )
-            }
+            repository.observeCharacter(id)
+                .catch {
+                    _uiState.value = ScreenState(isLoading = false, hasError = true)
+                }
+                .collect { character ->
+                    _uiState.value = if (character != null) {
+                        ScreenState(isLoading = false, data = character)
+                    } else {
+                        ScreenState(isLoading = false, hasError = true)
+                    }
+                }
+        }
+    }
+
+    fun toggleFavorite() {
+        val character = _uiState.value.data ?: return
+        viewModelScope.launch {
+            repository.setCharacterFavorite(character.id, !character.isFavorite)
         }
     }
 

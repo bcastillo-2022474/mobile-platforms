@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -32,7 +34,7 @@ import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterDetailScreen(character: Character, onBack: () -> Unit) {
+fun CharacterDetailScreen(character: Character, onBack: () -> Unit, onToggleFavorite: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -49,10 +51,19 @@ fun CharacterDetailScreen(character: Character, onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = onToggleFavorite) {
+                        Icon(
+                            imageVector = if (character.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Marcar como favorito"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
             Column(
@@ -110,5 +121,9 @@ fun Field(fieldName: String, value: String) {
 @Preview
 @Composable
 fun CharacterDetailScreenPreview() {
-    CharacterDetailScreen(character = Character(2, "Morty Smith", "Alive", "Human", "Male", ""), onBack = {})
+    CharacterDetailScreen(
+        character = Character(2, "Morty Smith", "Alive", "Human", "Male", ""),
+        onBack = {},
+        onToggleFavorite = {}
+    )
 }
