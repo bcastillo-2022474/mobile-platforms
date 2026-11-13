@@ -10,18 +10,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import plat.lab7.dto.Character
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,10 +38,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import coil3.compose.AsyncImage
+import plat.lab7.dto.Character
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterDetailScreen(character: Character, onBack: () -> Unit, onToggleFavorite: () -> Unit) {
+fun CharacterDetailScreen(
+    character: Character,
+    onBack: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var confirmDelete by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -57,6 +73,12 @@ fun CharacterDetailScreen(character: Character, onBack: () -> Unit, onToggleFavo
                             imageVector = if (character.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Marcar como favorito"
                         )
+                    }
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    }
+                    IconButton(onClick = { confirmDelete = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -84,6 +106,27 @@ fun CharacterDetailScreen(character: Character, onBack: () -> Unit, onToggleFavo
                 }
             }
         }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Eliminar personaje") },
+            text = { Text("¿Eliminar a ${character.name}? Solo se borra de este dispositivo.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete()
+                }) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
@@ -124,6 +167,8 @@ fun CharacterDetailScreenPreview() {
     CharacterDetailScreen(
         character = Character(2, "Morty Smith", "Alive", "Human", "Male", ""),
         onBack = {},
-        onToggleFavorite = {}
+        onToggleFavorite = {},
+        onEdit = {},
+        onDelete = {}
     )
 }

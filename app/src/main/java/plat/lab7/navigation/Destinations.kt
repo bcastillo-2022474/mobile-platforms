@@ -17,6 +17,10 @@ object Characters
 @Serializable
 data class CharacterDetail(val id: Int)
 
+// id == null opens the form to create a character
+@Serializable
+data class CharacterForm(val id: Int? = null)
+
 @Serializable
 object LocationsGraph
 

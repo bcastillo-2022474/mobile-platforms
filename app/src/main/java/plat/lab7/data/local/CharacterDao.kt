@@ -21,10 +21,26 @@ interface CharacterDao {
     @Query("UPDATE characters SET isFavorite = :isFavorite WHERE id = :id")
     suspend fun updateFavorite(id: Int, isFavorite: Boolean)
 
+    // Only the editable columns: an edit must not overwrite isFavorite
+    @Query("UPDATE characters SET name = :name, status = :status, species = :species, gender = :gender, image = :image WHERE id = :id")
+    suspend fun updateDetails(id: Int, name: String, status: String, species: String, gender: String, image: String)
+
+    @Query("SELECT COALESCE(MAX(id), 0) + 1 FROM characters")
+    suspend fun nextId(): Int
+
     @Query("SELECT COUNT(*) FROM characters")
     suspend fun count(): Int
 
-    // IGNORE keeps existing rows, so a repeated sync never resets favorites
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(character: CharacterEntity)
+
+    // IGNORE keeps existing rows, so a repeated sync never resets favorites or local edits
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(characters: List<CharacterEntity>)
+
+    @Query("DELETE FROM characters WHERE id = :id")
+    suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM characters")
+    suspend fun deleteAll()
 }

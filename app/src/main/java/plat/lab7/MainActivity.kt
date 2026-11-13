@@ -29,7 +29,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import plat.lab7.navigation.CharacterDetail
+import plat.lab7.navigation.CharacterForm
 import plat.lab7.navigation.Characters
 import plat.lab7.navigation.CharactersGraph
 import plat.lab7.navigation.LocationDetail
@@ -39,6 +41,7 @@ import plat.lab7.navigation.Login
 import plat.lab7.navigation.Profile
 import plat.lab7.navigation.Splash
 import plat.lab7.ui.components.CharacterDetailStateScreen
+import plat.lab7.ui.components.CharacterFormStateScreen
 import plat.lab7.ui.components.CharactersStateScreen
 import plat.lab7.ui.components.LocationDetailStateScreen
 import plat.lab7.ui.components.LocationsStateScreen
@@ -154,12 +157,23 @@ fun AppNavHost() {
                     CharactersStateScreen(
                         onCharacterClick = { id ->
                             navController.navigate(CharacterDetail(id))
+                        },
+                        onAddClick = {
+                            navController.navigate(CharacterForm())
                         }
                     )
                 }
-                composable<CharacterDetail> {
+                composable<CharacterDetail> { backStackEntry ->
+                    val detail: CharacterDetail = backStackEntry.toRoute()
                     CharacterDetailStateScreen(
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onEdit = { navController.navigate(CharacterForm(detail.id)) },
+                        onDeleted = { navController.popBackStack() }
+                    )
+                }
+                composable<CharacterForm> {
+                    CharacterFormStateScreen(
+                        onDone = { navController.popBackStack() }
                     )
                 }
             }

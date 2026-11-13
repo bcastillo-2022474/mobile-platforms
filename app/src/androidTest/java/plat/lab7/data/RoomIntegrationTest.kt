@@ -12,14 +12,20 @@ import org.junit.Before
 import org.junit.Test
 import plat.lab7.data.local.AppDatabase
 import plat.lab7.data.local.CharacterEntity
-import plat.lab7.data.local.toEntity
-import plat.lab7.repository.CharacterRepository
-import plat.lab7.repository.LocationDb
+import plat.lab7.data.local.LocationEntity
+import plat.lab7.data.remote.RickAndMortyApi
 
+// Runs on a device/emulator: real Room + SQLite, in memory.
 class RoomIntegrationTest {
 
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomLibraryRepository
+
+    private fun sampleCharacters() =
+        (1..20).map { CharacterEntity(it, "Character $it", "Alive", "Human", "Male", "") }
+
+    private fun sampleLocations() =
+        (1..5).map { LocationEntity(it, "Location $it", "Planet", "Dimension $it") }
 
     @Before
     fun setUp() {
@@ -27,7 +33,7 @@ class RoomIntegrationTest {
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
         ).build()
-        repository = RoomLibraryRepository(database)
+        repository = RoomLibraryRepository(database, RickAndMortyApi.create())
     }
 
     @After
@@ -36,65 +42,69 @@ class RoomIntegrationTest {
     }
 
     @Test
-    fun characterInsertKeepsAllRowsAndMapsFields() = runBlocking {
-        database.characterDao().insertAll(CharacterRepository().getAllCharacters().map { it.toEntity() })
-
-        val characters = repository.observeCharacters(favoritesOnly = false).first()
-
-        assertEquals(20, characters.size)
-        assertEquals(1, characters.first().id)
-        assertEquals("Rick Sanchez", characters.first().name)
-        assertTrue(characters.none { it.isFavorite })
-    }
-
-    @Test
     fun favoriteUpdatePersistsAndFiltersList() = runBlocking {
-        database.characterDao().insertAll(CharacterRepository().getAllCharacters().map { it.toEntity() })
+        database.characterDao().insertAll(sampleCharacters())
 
-        repository.setCharacterFavorite(id = 5, isFavorite = true)
+        repository.setCharacterFavorite(5, true)
 
         assertTrue(repository.observeCharacter(5).first()!!.isFavorite)
         assertEquals(listOf(5), repository.observeCharacters(favoritesOnly = true).first().map { it.id })
     }
 
     @Test
-    fun reinsertingDoesNotResetFavorites() = runBlocking {
-        database.characterDao().insertAll(CharacterRepository().getAllCharacters().map { it.toEntity() })
-        repository.setCharacterFavorite(id = 3, isFavorite = true)
+    fun reinsertingDoesNotResetFavoritesOrEdits() = runBlocking {
+        database.characterDao().insertAll(sampleCharacters())
+        repository.setCharacterFavorite(3, true)
+        repository.updateCharacter(3, CharacterDraft("Edited", "Dead", "Robot", "unknown", ""))
 
-        // Same primary keys again: IGNORE must keep the existing rows untouched
-        database.characterDao().insertAll(CharacterRepository().getAllCharacters().map { it.toEntity() })
+        database.characterDao().insertAll(sampleCharacters()) // same keys: IGNORE
 
+        val edited = repository.observeCharacter(3).first()!!
+        assertEquals("Edited", edited.name)
+        assertTrue(edited.isFavorite)
         assertEquals(20, repository.observeCharacters(favoritesOnly = false).first().size)
-        assertTrue(repository.observeCharacter(3).first()!!.isFavorite)
     }
 
     @Test
-    fun missingIdEmitsNull() = runBlocking {
-        assertNull(repository.observeCharacter(-1).first())
-        assertNull(repository.observeLocation(-1).first())
+    fun createUsesNextIdAndDeleteRemovesRow() = runBlocking {
+        database.characterDao().insertAll(sampleCharacters())
+
+        repository.createCharacter(CharacterDraft("New", "Alive", "Human", "Male", ""))
+        assertEquals("New", repository.observeCharacter(21).first()!!.name)
+
+        repository.deleteCharacter(21)
+        assertNull(repository.observeCharacter(21).first())
     }
 
     @Test
-    fun syncFillsBothTablesOnceAndDoesNotDuplicate() = runBlocking {
-        repository.syncInitialData()
-        assertEquals(20, repository.observeCharacters(false).first().size)
-        assertEquals(LocationDb().getAllLocations().size, repository.observeLocations().first().size)
+    fun locationFilterSeparatesFavorites() = runBlocking {
+        database.locationDao().insertAll(sampleLocations())
+        repository.setLocationFavorite(2, true)
 
-        repository.setCharacterFavorite(id = 2, isFavorite = true)
+        assertEquals(listOf(2), repository.observeLocations(LocationFilter.FAVORITES).first().map { it.id })
+        assertEquals(4, repository.observeLocations(LocationFilter.NOT_FAVORITES).first().size)
+        assertEquals(5, repository.observeLocations(LocationFilter.ALL).first().size)
+    }
+
+    @Test
+    fun syncIsSkippedWhenLocalDataExists() = runBlocking {
+        database.characterDao().insertAll(sampleCharacters())
+        database.locationDao().insertAll(sampleLocations())
 
         val start = System.currentTimeMillis()
-        repository.syncInitialData() // second run must return early: no 4s delay, no duplicates, no favorite reset
+        repository.syncFromApi() // must not touch the network when data already exists
         assertTrue(System.currentTimeMillis() - start < 1000)
-
         assertEquals(20, repository.observeCharacters(false).first().size)
-        assertTrue(repository.observeCharacter(2).first()!!.isFavorite)
     }
 
     @Test
-    fun insertedEntityIsReadBackAsModel() = runBlocking {
-        database.characterDao().insertAll(listOf(CharacterEntity(99, "X", "Alive", "Human", "Male", "")))
-        val model = repository.observeCharacter(99).first()
-        assertEquals("X", model!!.name)
+    fun clearAllEmptiesBothTables() = runBlocking {
+        database.characterDao().insertAll(sampleCharacters())
+        database.locationDao().insertAll(sampleLocations())
+
+        repository.clearAll()
+
+        assertEquals(0, repository.observeCharacters(false).first().size)
+        assertEquals(0, repository.observeLocations(LocationFilter.ALL).first().size)
     }
 }

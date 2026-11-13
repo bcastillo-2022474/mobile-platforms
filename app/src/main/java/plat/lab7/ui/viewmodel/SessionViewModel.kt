@@ -42,7 +42,7 @@ class SessionViewModel(
             _isSyncing.value = true
 
             val synced = try {
-                library.syncInitialData()
+                library.syncFromApi()
                 true
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -64,6 +64,7 @@ class SessionViewModel(
 
     fun logout(onDone: () -> Unit) {
         viewModelScope.launch {
+            library.clearAll()
             preferences.clearUserName()
             onDone()
         }

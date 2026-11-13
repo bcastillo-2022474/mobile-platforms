@@ -28,6 +28,9 @@ class CharacterDetailViewModel(
 
     private var loadingJob: Job? = null
 
+    // Set before deleting, so the row disappearing does not flash the error screen
+    private var deleting = false
+
     init {
         loadCharacter()
     }
@@ -45,6 +48,7 @@ class CharacterDetailViewModel(
                     _uiState.value = ScreenState(isLoading = false, hasError = true)
                 }
                 .collect { character ->
+                    if (character == null && deleting) return@collect
                     _uiState.value = if (character != null) {
                         ScreenState(isLoading = false, data = character)
                     } else {
@@ -58,6 +62,14 @@ class CharacterDetailViewModel(
         val character = _uiState.value.data ?: return
         viewModelScope.launch {
             repository.setCharacterFavorite(character.id, !character.isFavorite)
+        }
+    }
+
+    fun delete(onDone: () -> Unit) {
+        deleting = true
+        viewModelScope.launch {
+            repository.deleteCharacter(id)
+            onDone()
         }
     }
 

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,7 +28,7 @@ import androidx.compose.ui.unit.em
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationDetailScreen(location: Location, onBack: () -> Unit) {
+fun LocationDetailScreen(location: Location, onBack: () -> Unit, onToggleFavorite: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -43,10 +45,19 @@ fun LocationDetailScreen(location: Location, onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = onToggleFavorite) {
+                        Icon(
+                            imageVector = if (location.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = "Marcar como favorita"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
             Column(
@@ -73,5 +84,5 @@ fun LocationDetailScreen(location: Location, onBack: () -> Unit) {
 @Preview
 @Composable
 fun LocationDetailScreenPreview() {
-    LocationDetailScreen(location = Location(1, "Earth (C-137)", "Planet", "Dimension C-137"), onBack = {})
+    LocationDetailScreen(location = Location(1, "Earth (C-137)", "Planet", "Dimension C-137"), onBack = {}, onToggleFavorite = {})
 }
